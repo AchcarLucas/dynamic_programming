@@ -95,6 +95,7 @@ uint64_t maze_problem(uint64_t _n, uint64_t _m)
 
     std::pair<std::pair<uint64_t, uint64_t>, uint64_t> result = std::make_pair(std::make_pair(_n, _m), maze_problem(_n - 1, _m) + maze_problem(_n, _m - 1));
     mem_maze.insert(mem_maze.begin(), result);
+
     return result.second;
 }
 
