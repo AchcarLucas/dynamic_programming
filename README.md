@@ -1,3 +1,6 @@
 # dynamic_programming
 
-[![Dynamic Programming](http://img.youtube.com/vi/Hdr64lKQ3e4/0.jpg)](https://www.youtube.com/watch?v=Hdr64lKQ3e4)
+cpp code 
+
+[![Dynamic Programming-1](http://img.youtube.com/vi/Hdr64lKQ3e4/0.jpg)](https://www.youtube.com/watch?v=Hdr64lKQ3e4)
+[![Dynamic Programming-2](http://img.youtube.com/vi/rE5h11FwiVw/0.jpg)](https://www.youtube.com/watch?v=rE5h11FwiVw)
