@@ -18,6 +18,7 @@ std::ostream& operator<<( std::ostream& os, std::list<T> const &list)
 }
 
 std::list<std::pair<uint64_t, uint64_t>> mem;
+std::list<std::pair<std::pair<uint64_t, uint64_t>, uint64_t>> mem_maze;
 
 uint64_t fib(uint64_t n)
 {
@@ -82,6 +83,21 @@ uint64_t many_ways_coins(uint64_t money, std::list<uint64_t> coins)
     return result.second;
 }
 
+uint64_t maze_problem(uint64_t _n, uint64_t _m)
+{
+    for(auto const &m : mem_maze) {
+        std::pair<uint64_t, uint64_t> grid = m.first;
+        if(grid.first == _n && grid.second == _m)
+            return m.second;
+    }
+
+    if(_m == 1 || _n == 1) return 1;
+
+    std::pair<std::pair<uint64_t, uint64_t>, uint64_t> result = std::make_pair(std::make_pair(_n, _m), maze_problem(_n - 1, _m) + maze_problem(_n, _m - 1));
+    mem_maze.insert(mem_maze.begin(), result);
+    return result.second;
+}
+
 void test_fib()
 {
     mem.clear();
@@ -105,10 +121,19 @@ void test_many_ways()
     std::cout << "many_ways_coins(" << money << ", " << coins << ") = " << many_ways_coins(money, coins) << std::endl;
 }
 
+void test_maze_problem()
+{
+    mem_maze.clear();
+    uint64_t n = 75;
+    uint64_t m = 19;
+    std::cout << "maze_problem(" << n << ", " << m << ") = " << maze_problem(n, m) << std::endl;
+}
+
 int main()
 {
     test_fib();
     test_minimum_coins();
     test_many_ways();
+    test_maze_problem();
     return 0;
 }
