@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 template <typename T>
-std::ostream& operator<<( std::ostream& os, std::list<T> const &list)
+std::ostream& operator<<(std::ostream& os, std::list<T> const &list)
 {
     os << "{ ";
     for (auto const &i: list)
@@ -19,11 +19,44 @@ std::ostream& operator<<( std::ostream& os, std::list<T> const &list)
 }
 
 template <typename T>
-std::ostream& operator<<( std::ostream& os, std::vector<T> const &list)
+std::ostream& operator<<(std::ostream& os, std::list<std::pair<T, T>> const &list)
+{
+    os << "{\n";
+    for (auto const &i: list)
+        os << "(" << i.first << ") = " << i.second << "\n";
+    os << "}";
+    return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, std::list<std::pair<std::pair<T, T>, T>> const &list)
+{
+    os << "{\n";
+    for (auto const &i: list)
+        os << "(" << i.first.first << ", " << i.first.second << ") = " << i.second << "\n";
+    os << "}";
+    return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, std::vector<T> const &vector)
 {
     os << "{ ";
-    for (auto const &i: list)
+    for (auto const &i: vector)
         os << i << " ";
+    os << "}";
+    return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, std::vector<std::vector<T>> const &vector)
+{
+    os << "{\n";
+    for(uint64_t i = 0; i < vector.size(); ++i) {
+        for(uint64_t j = 0; j < vector[i].size(); ++j) {
+            os << "(" << i << ", " << j << ") = " << vector[i][j] << "\n";
+        }
+    }
     os << "}";
     return os;
 }
@@ -133,6 +166,51 @@ uint64_t longest_common_subsequence(uint64_t _n, uint64_t _m, std::vector<uint64
     return result.second;
 }
 
+std::vector<std::vector<uint64_t>> convert_list_to_vector(std::list<std::pair<std::pair<uint64_t, uint64_t>, uint64_t>> lcs, uint64_t n, uint64_t m)
+{
+    std::vector<std::vector<uint64_t>> v_lcs;
+
+    v_lcs.resize(n + 1);
+
+    for(uint64_t i = 0; i < n + 1; ++i) {
+        v_lcs[i].resize(m + 1);
+
+        for(uint64_t j = 0; j < m + 1; ++j) {
+            v_lcs[i][j] = 0;
+        }
+    }
+
+    for(auto const &m : mem_quad) {
+        std::pair<uint64_t, uint64_t> grid = m.first;
+        v_lcs[grid.first][grid.second] = m.second;
+    }
+
+    return v_lcs;
+}
+
+std::vector<uint64_t> reconstruct_subsequence(std::vector<std::vector<uint64_t>> lcs, std::vector<uint64_t> a, std::vector<uint64_t> b)
+{
+    std::vector<uint64_t> elements;
+
+    uint64_t i = a.size();
+    uint64_t j = b.size();
+
+    while(i > 0 && j > 0) {
+        if(a[i - 1] == b[j - 1]) {
+            elements.push_back(a[i - 1]);
+            i--;
+            j--;
+        } else if(lcs[i - 1][j] > lcs[i][j - 1]) {
+            i--;
+        } else {
+            j--;
+        }
+    }
+
+    std::reverse(elements.begin(), elements.end());
+    return elements;
+}
+
 void test_fib()
 {
     mem_linear.clear();
@@ -203,6 +281,64 @@ void test_longest_common_subsequence()
     }
 }
 
+void test_reconstruct_subsequence()
+{
+    {
+        mem_quad.clear();
+        std::vector<uint64_t> a = {1, 4, 5, 6, 9, 10, 11};
+        std::vector<uint64_t> b = {6, 4, 5, 9, 11};
+        longest_common_subsequence(a.size(), b.size(), a, b);
+        std::vector<std::vector<uint64_t>> v_lcs = convert_list_to_vector(mem_quad, a.size(), b.size());
+        std::vector<uint64_t> r = reconstruct_subsequence(v_lcs, a, b);
+        std::cout << "reconstruct_subsequence(" << v_lcs << ", " << a << ", " << b << ") = " << r << std::endl;
+        assert(r == std::vector<uint64_t>({4, 5, 9, 11}));
+    }
+
+    {
+        mem_quad.clear();
+        std::vector<uint64_t> a = {};
+        std::vector<uint64_t> b = {1, 15, 4, 5, 6, 9, 10, 11};
+        longest_common_subsequence(a.size(), b.size(), a, b);
+        std::vector<std::vector<uint64_t>> v_lcs = convert_list_to_vector(mem_quad, a.size(), b.size());
+        std::vector<uint64_t> r = reconstruct_subsequence(v_lcs, a, b);
+        std::cout << "reconstruct_subsequence(" << v_lcs << ", " << a << ", " << b << ") = " << r << std::endl;
+        assert(r == std::vector<uint64_t>({}));
+    }
+
+    {
+        mem_quad.clear();
+        std::vector<uint64_t> a = {};
+        std::vector<uint64_t> b = {};
+        longest_common_subsequence(a.size(), b.size(), a, b);
+        std::vector<std::vector<uint64_t>> v_lcs = convert_list_to_vector(mem_quad, a.size(), b.size());
+        std::vector<uint64_t> r = reconstruct_subsequence(v_lcs, a, b);
+        std::cout << "reconstruct_subsequence(" << v_lcs << ", " << a << ", " << b << ") = " << r << std::endl;
+        assert(r == std::vector<uint64_t>({}));
+    }
+
+    {
+        mem_quad.clear();
+        std::vector<uint64_t> a = {1, 2, 3, 4, 5};
+        std::vector<uint64_t> b = {1, 2, 3, 4, 5};
+        longest_common_subsequence(a.size(), b.size(), a, b);
+        std::vector<std::vector<uint64_t>> v_lcs = convert_list_to_vector(mem_quad, a.size(), b.size());
+        std::vector<uint64_t> r = reconstruct_subsequence(v_lcs, a, b);
+        std::cout << "reconstruct_subsequence(" << v_lcs << ", " << a << ", " << b << ") = " << r << std::endl;
+        assert(r == std::vector<uint64_t>({1, 2, 3, 4, 5}));
+    }
+
+    {
+        mem_quad.clear();
+        std::vector<uint64_t> a = {1, 2, 3, 4, 5};
+        std::vector<uint64_t> b = {1, 3, 2, 4, 5};
+        longest_common_subsequence(a.size(), b.size(), a, b);
+        std::vector<std::vector<uint64_t>> v_lcs = convert_list_to_vector(mem_quad, a.size(), b.size());
+        std::vector<uint64_t> r = reconstruct_subsequence(v_lcs, a, b);
+        std::cout << "reconstruct_subsequence(" << v_lcs << ", " << a << ", " << b << ") = " << r << std::endl;
+        assert(r == std::vector<uint64_t>({1, 3, 4, 5}));
+    }
+}
+
 int main()
 {
     test_fib();
@@ -210,5 +346,6 @@ int main()
     test_many_ways();
     test_maze_problem();
     test_longest_common_subsequence();
+    test_reconstruct_subsequence();
     return 0;
 }
