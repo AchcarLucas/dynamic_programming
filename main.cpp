@@ -5,8 +5,59 @@
 #include <limits>
 #include <list>
 #include <cassert>
+#include <sstream>
 
 #include <stdint.h>
+
+enum COLOR {
+    NONE,
+    BLUE,
+    GREEN,
+    CYAN,
+    RED,
+    MAGENTA,
+    YELLOW
+};
+
+class StringColor {
+    public:
+        StringColor(std::string string, COLOR color) : _string(string), _color(color) {}
+        COLOR _color = COLOR::NONE;
+        std::string _string = nullptr;
+};
+
+std::ostream& operator<<(std::ostream& os, const StringColor &cs) {
+    #ifdef _WIN32
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        unsigned col = 7;
+
+        if (cs._color == COLOR::BLUE) col = 1;
+        else if (cs._color == COLOR::GREEN) col = 2;
+        else if (cs._color == COLOR::CYAN) col = 3;
+        else if (cs._color == COLOR::RED) col = 4;
+        else if (cs._color == COLOR::MAGENTA) col = 5;
+        else if (cs._color == COLOR::YELLOW) col = 6;
+
+        SetConsoleTextAttribute(hConsole, col);
+        os << cs._string;
+        SetConsoleTextAttribute(hConsole, 7);
+
+        return os;
+    #else
+        std::string col = "\033[0m";
+
+        if (cs._color == COLOR::BLUE) col = "\033[0;34m";
+        else if (cs._color == COLOR::GREEN) col = "\033[0;32m";
+        else if (cs._color == COLOR::CYAN) col = "\033[0;36m";
+        else if (cs._color == COLOR::RED) col = "\033[0;31m";
+        else if (cs._color == COLOR::MAGENTA) col = "\033[0;35m";
+        else if (cs._color == COLOR::YELLOW) col = "\033[0;33m";
+
+        os << col << cs._string << "\033[0m";
+
+        return os;
+    #endif
+}
 
 template <typename T>
 std::ostream& operator<<(std::ostream& os, std::list<T> const &list)
@@ -143,7 +194,8 @@ uint64_t maze_problem(uint64_t _n, uint64_t _m)
     return result.second;
 }
 
-uint64_t longest_common_subsequence(uint64_t _n, uint64_t _m, std::vector<uint64_t> a, std::vector<uint64_t> b)
+template <typename T>
+uint64_t longest_common_subsequence(uint64_t _n, uint64_t _m, std::vector<T> a, std::vector<T> b)
 {
     if(_n == 0 || _m == 0) return 0;
 
@@ -166,7 +218,8 @@ uint64_t longest_common_subsequence(uint64_t _n, uint64_t _m, std::vector<uint64
     return result.second;
 }
 
-std::vector<std::vector<uint64_t>> convert_list_to_vector(std::list<std::pair<std::pair<uint64_t, uint64_t>, uint64_t>> lcs, uint64_t n, uint64_t m)
+template <typename T>
+std::vector<std::vector<uint64_t>> convert_list_to_vector(std::list<std::pair<std::pair<uint64_t, uint64_t>, T>> lcs, uint64_t n, uint64_t m)
 {
     std::vector<std::vector<uint64_t>> v_lcs;
 
@@ -188,9 +241,10 @@ std::vector<std::vector<uint64_t>> convert_list_to_vector(std::list<std::pair<st
     return v_lcs;
 }
 
-std::vector<uint64_t> reconstruct_subsequence(std::vector<std::vector<uint64_t>> lcs, std::vector<uint64_t> a, std::vector<uint64_t> b)
+template <typename T>
+std::vector<T> reconstruct_subsequence(std::vector<std::vector<uint64_t>> lcs, std::vector<T> a, std::vector<T> b)
 {
-    std::vector<uint64_t> elements;
+    std::vector<T> elements;
 
     uint64_t i = a.size();
     uint64_t j = b.size();
@@ -339,6 +393,76 @@ void test_reconstruct_subsequence()
     }
 }
 
+std::vector<std::string> convert_string_to_vector(std::string m_string)
+{
+    std::vector<std::string> v;
+
+    std::istringstream m(m_string);
+    std::string l;
+
+    while(std::getline(m, l))
+        v.push_back(l);
+
+    return v;
+}
+
+void test_diff_file()
+{
+    std::string file_a = "#include <cstdio>\n\
+    int compute(int a, int b) {\n\
+      return a + b;\n\
+    }\n\
+    int main(int argc, char** argv) {\n\
+      int a = 3;\n\
+      int b = 4;\n\
+      int c;\n\
+      c = compute(a, b);\n\
+      printf(\"%d\\n\", c);\n\
+      return 0;\n\
+    }";
+
+    std::string file_b = "#include <iostream>\n\
+    int compute(int a, int b) {\n\
+      return a - b;\n\
+    }\n\
+    int main(int argc, char** argv) {\n\
+      int c;\n\
+      int a = 3;\n\
+      int b = 4;\n\
+      c = compute(a, b);\n\
+      std::cout << c << std::endl;\n\
+      return 0;\n\
+    };";
+
+    std::vector<std::string> a = convert_string_to_vector(file_a);
+    std::vector<std::string> b = convert_string_to_vector(file_b);
+
+    mem_quad.clear();
+
+    longest_common_subsequence(a.size(), b.size(), a, b);
+    std::vector<std::vector<uint64_t>> v_lcs = convert_list_to_vector(mem_quad, a.size(), b.size());
+    std::vector<std::string> lcs = reconstruct_subsequence(v_lcs, a, b);
+
+    int l_a = 0;
+    int l_b = 0;
+
+    for(const auto &l : lcs) {
+        while(a[l_a] != l) {
+            std::cout << StringColor(" - ", COLOR::RED) << StringColor(a[l_a], COLOR::RED) << "\n";
+            ++l_a;
+        }
+        while(b[l_b] != l) {
+            std::cout << StringColor(" + ", COLOR::GREEN) << StringColor(b[l_b], COLOR::GREEN) << "\n";
+            ++l_b;
+        }
+
+        assert(a[l_a] == b[l_b]);
+        std::cout << "  " << a[l_a] << "\n";
+        ++l_a;
+        ++l_b;
+    }
+}
+
 int main()
 {
     test_fib();
@@ -347,5 +471,6 @@ int main()
     test_maze_problem();
     test_longest_common_subsequence();
     test_reconstruct_subsequence();
+    test_diff_file();
     return 0;
 }
