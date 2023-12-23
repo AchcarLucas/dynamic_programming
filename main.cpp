@@ -218,8 +218,7 @@ uint64_t longest_common_subsequence(uint64_t _n, uint64_t _m, std::vector<T> a, 
     return result.second;
 }
 
-template <typename T>
-std::vector<std::vector<uint64_t>> convert_list_to_vector(std::list<std::pair<std::pair<uint64_t, uint64_t>, T>> lcs, uint64_t n, uint64_t m)
+std::vector<std::vector<uint64_t>> convert_list_to_vector(std::list<std::pair<std::pair<uint64_t, uint64_t>, uint64_t>> lcs, uint64_t n, uint64_t m)
 {
     std::vector<std::vector<uint64_t>> v_lcs;
 
@@ -400,39 +399,44 @@ std::vector<std::string> convert_string_to_vector(std::string m_string)
     std::istringstream m(m_string);
     std::string l;
 
-    while(std::getline(m, l))
+    while(std::getline(m, l)) {
         v.push_back(l);
+    }
 
     return v;
 }
 
 void test_diff_file()
 {
-    std::string file_a = "#include <cstdio>\n\
+    std::string file_a = "\
+    #include <cstdio>\n\
     int compute(int a, int b) {\n\
-      return a + b;\n\
+        return a + b;\n\
     }\n\
     int main(int argc, char** argv) {\n\
-      int a = 3;\n\
-      int b = 4;\n\
-      int c;\n\
-      c = compute(a, b);\n\
-      printf(\"%d\\n\", c);\n\
-      return 0;\n\
-    }";
+        int a = 3;\n\
+        int b = 4;\n\
+        int c;\n\
+        c = compute(a, b);\n\
+        printf(\"%d\\n\", c);\n\
+        return 0;\n\
+    }\n\
+    ";
 
-    std::string file_b = "#include <iostream>\n\
+    std::string file_b = "\
+    #include <iostream>\n\
     int compute(int a, int b) {\n\
-      return a - b;\n\
+        return a - b;\n\
     }\n\
     int main(int argc, char** argv) {\n\
-      int c;\n\
-      int a = 3;\n\
-      int b = 4;\n\
-      c = compute(a, b);\n\
-      std::cout << c << std::endl;\n\
-      return 0;\n\
-    };";
+        int c;\n\
+        int a = 3;\n\
+        int b = 4;\n\
+        c = compute(a, b);\n\
+        std::cout << c << std::endl;\n\
+        return 0;\n\
+    }\n\
+    ";
 
     std::vector<std::string> a = convert_string_to_vector(file_a);
     std::vector<std::string> b = convert_string_to_vector(file_b);
@@ -457,7 +461,7 @@ void test_diff_file()
         }
 
         assert(a[l_a] == b[l_b]);
-        std::cout << "  " << a[l_a] << "\n";
+        std::cout << "   " << a[l_a] << "\n";
         ++l_a;
         ++l_b;
     }
